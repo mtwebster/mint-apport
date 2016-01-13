@@ -1,0 +1,3 @@
+Tests: upstream-system
+Depends: @, python-twisted-core, python3-mock, xvfb, xterm, dbus-x11, at-spi2-core, gvfs-daemons, libglib2.0-dev, libglib2.0-0-dbg, libnih-dev
+Restrictions: needs-root

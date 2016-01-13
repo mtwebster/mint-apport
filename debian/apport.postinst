@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = configure ]; then
+    # directory is required for package failures even if apport is disabled and
+    # thus the upstart job does not run
+    mkdir -p -m 1777 /var/crash
+fi
+
+#DEBHELPER#

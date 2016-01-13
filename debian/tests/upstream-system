@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+# do not run in the source tree, as we want to check the system-installed
+# apport
+cd ${TMPDIR:-/tmp}
+
+# clean up old crash reports
+rm -rf /var/crash/*
+
+# succeeding test must not write anything to stderr, as per DEP-8
+# work around LP #972324
+env -u TMPDIR /usr/share/apport/testsuite/run 2>&1
+ret=$?
+echo "Number of failed tests: $ret"
+exit $ret

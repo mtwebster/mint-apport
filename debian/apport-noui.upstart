@@ -1,0 +1,12 @@
+description "Process error reports when automatic reporting is enabled"
+author "Evan Dandrea <evan.dandrea@canonical.com>"
+
+start on (
+    file FILE=/var/crash/*.crash EVENT=create
+)
+
+instance $MATCH
+script
+    [ -e /var/lib/apport/autoreport ] || exit 0
+    exec /usr/share/apport/whoopsie-upload-all
+end script

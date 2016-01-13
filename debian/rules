@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+
+%:
+	dh "$@" --with python2,python3,translations
+
+# needs manual commands for Python 3, see Debian #597105
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build
+
+override_dh_auto_build:
+	dh_auto_build
+	python3 setup.py build
+
+override_dh_auto_install:
+	dh_auto_install
+	set -ex; for python in $(shell py3versions -r); do \
+	    $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done
+
+override_dh_auto_test:
+ifeq (, $(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+	# drop LD_PRELOAD to avoid running under fakeroot; drop TMPDIR to work
+	# around LP#972324 (set by autopkgtest)
+	# run subset of tests that work on buildds, full tests are in
+	# autopkgtest
+	set -e; for t in apport_unpack apport_valgrind crashdb hooks packaging \
+	         parse_segv problem_report rethread; do \
+	    env -u LD_PRELOAD -u TMPDIR APPORT_TEST_NOXVFB=1 sh test/run $$t; \
+	done
+endif
+
+override_dh_installinit:
+	dh_installinit --error-handler=true
+
+override_dh_install:
+	dh_install -X.pyc -X.egg-info --list-missing
+	pod2man -c Debhelper -r "$(DEB_VERSION)" debhelper/dh_apport debhelper/dh_apport.1
+	# apport-retrace needs python-launchpadlib, which is not yet available
+	# for Python 3; so switch back to Python 2
+	sed -i '1 s/python3.*$$/python/' debian/apport-retrace/usr/bin/apport-retrace
+
+override_dh_python3:
+	dh_python3 --skip-private
